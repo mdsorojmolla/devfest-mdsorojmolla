@@ -1,178 +1,248 @@
 # Tender Document Package Builder
 
-A frontend-only web application that helps an office worker assemble a tender submission. The user loads a `requirements.json` file, uploads PDF documents, matches each PDF to a required document, enters expiry dates, fixes validation problems, and downloads one combined PDF package with a cover page, correct ordering, and page-numbered footers.
+A frontend-only web application that helps an office worker assemble a tender submission. The user loads a `requirements.json` file, uploads PDF documents, matches each PDF to a required document, verifies or edits automatically detected expiry dates, fixes validation problems, and downloads one combined PDF package with an English cover page, correct ordering, and page-numbered footers.
 
 Built for the AI DevFest 2026 Vibe Coding Competition.
 
-## Privacy: browser-only processing
+---
 
-- The application is **frontend-only**. There is no backend, database, login, or cloud storage in this project.
-- All PDF reading, hashing, validation, and generation happens **inside the browser** on the user's machine.
-- The code contains no logic that uploads tender documents anywhere.
-- The only external resource the page loads is the `pdf-lib` script from `cdnjs.cloudflare.com` (see [Technology](#technology)). Documents are never sent to it.
+## Privacy: 100% Browser-Only Processing
+
+* The application is **strictly frontend-only**. There is no backend, database, authentication, or cloud storage.
+* All PDF parsing, hashing, text extraction, expiry date detection, validation, and package generation happen **locally inside the browser** on the user's machine.
+* The code contains no logic that transmits tender documents, text, or metadata anywhere.
+* The only external resources loaded are CDN scripts: `pdf-lib` and `pdf.js` (see [Technology](#technology)). Documents and extracted text are never sent to external servers or AI APIs.
+
+---
 
 ## Technology
 
 | Item | Detail |
 |---|---|
-| Application | One self-contained file: `tender-package-builder.html` (HTML, CSS, vanilla JavaScript) |
-| PDF library | [pdf-lib](https://pdf-lib.js.org/) 1.17.1, loaded from `https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js` |
-| Hashing | Browser Web Crypto API (`crypto.subtle.digest`, SHA-256) |
-| Framework / build step | None |
-| Target browser | Latest Google Chrome |
+| **Application** | Self-contained single-page application: `index.html` (HTML5, Vanilla CSS, Vanilla JavaScript) |
+| **PDF Assembly & Generation** | [pdf-lib](https://pdf-lib.js.org/) 1.17.1 from `https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js` |
+| **PDF Text Extraction** | [pdf.js](https://mozilla.github.io/pdf.js/) 3.11.174 from `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js` |
+| **File Hashing** | Browser Web Crypto API (`crypto.subtle.digest`, SHA-256) |
+| **Styling** | Vanilla CSS design tokens with full light/dark mode support |
+| **Framework / Build Step** | None (zero dependencies, zero build step) |
+| **Target Browser** | Modern Google Chrome |
 
-pdf.js is **not** used. Page counting and package generation are both done with pdf-lib.
+---
 
-## Running it
+## Running the Application
 
-No installation or build is required.
+No installation or build step is required.
 
-1. Open `tender-package-builder.html` in Google Chrome. An internet connection is needed the first time so the pdf-lib script can load from the CDN.
+1. Open `index.html` in Google Chrome (an active internet connection is required on first load to fetch `pdf-lib` and `pdf.js` from cdnjs).
 2. Follow the workflow below.
 
-If the page is hosted somewhere that provides the Claude Artifact `downloads` API, the final download goes through that API's save prompt. Everywhere else it falls back to a standard browser download of `<tender_id>_Package.pdf`.
+If the page is hosted in an environment providing the Claude Artifact `downloads` API, the final download uses that prompt; in standard browsers, it triggers a native file download of `<tender_id>_Package.pdf`.
+
+---
 
 ## Workflow
 
-1. **Load requirements:** choose `requirements.json`.
-2. **Upload PDFs:** select multiple PDFs at once (or drag them onto the upload box).
-3. **Match documents:** for each requirement, pick the uploaded file from its dropdown.
-4. **Enter expiry dates:** shown only for requirements with `has_expiry: true` that have a file.
-5. **Fix problems:** the status badges and the "why generation is disabled" panel show what is blocking.
-6. **Generate:** the button enables once nothing is blocking.
-7. **Download:** the package is saved as `<tender_id>_Package.pdf`. A "Download again" button remains until the user changes any match, date, or file.
+1. **Load requirements:** Click **Open requirements.json** (or **requirements.json খুলুন**).
+2. **Upload PDFs:** Select multiple PDFs at once (or drag-and-drop onto the drop zone).
+3. **Match documents:** For each requirement, select the uploaded file from its dropdown.
+4. **Automatic Expiry Date Detection & Confirmation:**
+   * For requirements with `has_expiry: true`, matching a PDF immediately triggers in-browser text extraction and date analysis.
+   * If a high-confidence expiry date is detected, the date input is automatically populated, displaying a green detection banner with **[Use this date]** and **[Edit]** options.
+   * If multiple or lower-confidence dates are found, interactive buttons are shown under **Possible expiry dates:** for the user to select.
+   * If the PDF is scanned or lacks extractable dates, a clear manual entry prompt is shown.
+   * The user can manually edit or change the date at any time.
+5. **Fix problems:** Check badges and the blocking issues alert box (Missing, Expiry date needed, Expired).
+6. **Generate:** The **Generate & download package** button activates once all blocking issues are resolved.
+7. **Download:** The combined package is saved as `<tender_id>_Package.pdf`. A **Download again** button remains active until matches, files, or dates change.
 
-## `requirements.json` format
+---
+
+## `requirements.json` Format
 
 ```json
 {
   "tender": {
-    "tender_id": "...",
-    "title": "...",
-    "procuring_entity": "...",
-    "bidder": "...",
-    "submission_deadline": "YYYY-MM-DD"
+    "tender_id": "TND-2026-001",
+    "title": "School Infrastructure Construction",
+    "procuring_entity": "Ministry of Primary and Mass Education",
+    "bidder": "Acme Builders Ltd",
+    "submission_deadline": "2026-10-15"
   },
   "requirements": [
     {
-      "id": "...",
+      "id": "trade_license",
       "order": 1,
-      "title_en": "...",
-      "title_bn": "...",
+      "title_en": "Trade License",
+      "title_bn": "ট্রেড লাইসেন্স",
       "mandatory": true,
       "has_expiry": true
+    },
+    {
+      "id": "tax_cert",
+      "order": 2,
+      "title_en": "TIN / Tax Clearance Certificate",
+      "title_bn": "কর পরিশোধের সনদ",
+      "mandatory": true,
+      "has_expiry": true
+    },
+    {
+      "id": "bank_solvency",
+      "order": 3,
+      "title_en": "Bank Solvency Certificate",
+      "title_bn": "ব্যাংক সচ্ছলতা সনদ",
+      "mandatory": false,
+      "has_expiry": false
     }
   ]
 }
 ```
 
-Everything is driven by this file and by the uploaded PDFs. No document names, IDs, titles, or dates are hard-coded, and any number of requirements is supported.
+Loading rules:
+* `tender.tender_id` is mandatory and cannot be blank.
+* `tender.submission_deadline` must be a valid calendar date in `YYYY-MM-DD` format (trailing times are safely ignored).
+* Each requirement must have a unique `id`.
+* Requirements are ordered by `order` (falls back to file order if missing).
+* `mandatory` and `has_expiry` accept boolean `true`/`false`, strings `"true"`/`"false"`, or `1`/`0`.
+* If `title_bn` is omitted, `title_en` is used (and vice-versa).
 
-Loading rules, as implemented:
+---
 
-- `tender_id` is required and must be non-empty.
-- `submission_deadline` must be a real calendar date in `YYYY-MM-DD` form. A trailing time part is accepted and ignored.
-- Each requirement must have an `id`. IDs are treated as strings, may contain any characters, and must be unique.
-- Requirements are sorted by `order`. If `order` is missing or not numeric, the requirement's position in the file is used.
-- `mandatory` and `has_expiry` are true for `true`, `"true"`, `1`, or `"1"`, and false otherwise.
-- If `title_bn` is missing, `title_en` is used (and the reverse for `title_en`).
-- An invalid file shows a clear error in the current UI language.
+## Features Implemented
 
-## Features implemented
+### 1. Automatic Expiry Date Detection (New)
 
-### PDF upload
+* **Client-Side Text Extraction**: Uses `pdf.js` to extract text from all pages of matched PDFs on demand.
+* **Smart In-Memory Caching**: Extracted text is cached on the file object (`file._text`). Changing requirements or re-rendering never re-parses the PDF unnecessarily.
+* **Numeral Normalization**: Recognizes Bangla numerals (`০, ১, ২, ৩, ৪, ৫, ৬, ৭, ৮, ৯`) and normalizes them 1-to-1 to standard digits (`0-9`), preserving offsets and Bangla text.
+* **Bangla Month Names & Spelling Variations**:
+  * Supports full names and common variants: জানুয়ারি/জানুয়ারি, ফেব্রুয়ারি/ফেব্রুয়ারি, মার্চ, এপ্রিল, মে, জুন, জুলাই, আগস্ট/অগাস্ট, সেপ্টেম্বর, অক্টোবর, নভেম্বর, ডিসেম্বর.
+* **Date Formats Supported**:
+  * `DD/MM/YYYY`, `DD-MM-YYYY`, `DD.MM.YYYY`
+  * `YYYY-MM-DD`, `YYYY/MM/DD`, `YYYY.MM.DD`
+  * `DD Month YYYY` (e.g. `20 October 2027`, `20th Oct 2027`, `২০ অক্টোবর ২০২৭`, `২০শে অক্টোবর ২০২৭`)
+  * `Month DD, YYYY` (e.g. `October 20, 2027`, `Oct 20, 2027`, `অক্টোবর ২০, ২০২৭`)
+* **Context & Proximity Scoring**:
+  * **High Confidence**: Triggered when strong expiry phrases immediately precede or neighbor a valid date (e.g., `Expiry Date`, `Valid Until`, `Valid Till`, `Valid Up To`, `Expires`, `মেয়াদ শেষের তারিখ`, `মেয়াদ উত্তীর্ণের তারিখ`, `মেয়াদোত্তীর্ণের তারিখ`).
+  * **Medium Confidence**: Triggered by validity phrases (e.g., `Validity`, `বৈধতার তারিখ`, `বৈধতার মেয়াদ`, `মেয়াদ`).
+  * **Issue Date Disambiguation**: Actively penalizes issue date phrases (e.g., `Date of Issue`, `Issue Date`, `ইস্যুর তারিখ`, `প্রদানের তারিখ`) to ensure issue dates are never selected as expiry dates.
+* **Safe, Transparent UI**:
+  * **High confidence**: Auto-populates the date field, displays `✓ Expiry date detected automatically` / `✓ মেয়াদ শেষের তারিখ স্বয়ংক্রিয়ভাবে সনাক্ত হয়েছে`, the formatted date, and **[Use this date]** + **[Edit]** buttons.
+  * **Lower confidence / Multiple dates**: Displays candidate buttons under `Possible expiry dates:` / `সম্ভাব্য মেয়াদ শেষের তারিখ:` allowing single-click selection.
+  * **No date found**: Displays informative note: `Expiry date could not be detected automatically. Please enter it manually.` (non-blocking).
+  * **Scanned / Image-only PDF**: Gracefully detects when no text layer exists and shows: `Automatic expiry detection is unavailable for this scanned PDF. Please enter the expiry date manually.`
+  * **Manual Edits**: The user can override or fine-tune any date using the native HTML date picker.
 
-- Multiple files at once; non-PDF files are rejected with a message.
-- Limits: **30 files** and **50 MB total** (52,428,800 bytes). Files over a limit are not added, and the reason is shown per file.
-- Each file shows name, size, page count, matched requirement, duplicate state, and a remove button. A running "files / total size" summary is shown.
-- Files are validated and counted one at a time and the list updates as each file is read. Overlapping selections are queued so limits stay exact.
-- Damaged, truncated, empty, and password-protected PDFs are rejected with a specific message and do not crash the app. PDFs that are encrypted without needing a password to open (owner-password only) are also rejected as password protected.
+### 2. PDF Upload & Validation
 
-### Exact duplicate detection
+* Multi-file upload via file picker or drag-and-drop.
+* Limits enforced: **up to 30 files** and **50 MB total** (52,428,800 bytes).
+* Upload queue processes files sequentially to ensure limits and page counts remain accurate.
+* Rejects non-PDFs, empty files, corrupted documents, and password-protected files with specific error messages.
 
-- Every file is hashed with SHA-256. Files with identical content are flagged with a "Duplicate group" badge that names the identical files.
-- An identical copy cannot be matched to a different requirement than its twin. Duplicates are shown, never silently ignored.
-- Duplicates are a warning, not a blocking status.
+### 3. Exact Duplicate Detection
 
-### Matching
+* Calculates SHA-256 hashes via `crypto.subtle.digest`.
+* Files with identical binary content are grouped under a lettered badge (e.g., `Duplicate group A`).
+* Identical copies are restricted from being matched to different requirements simultaneously.
 
-- One requirement has at most one file, and one file has at most one requirement.
-- A match can be changed or undone. Picking a file already used by another requirement moves it and frees the old requirement.
-- Undoing a match, replacing the file, or removing the file also clears that requirement's expiry date, so a stale date cannot carry over to a different document.
+### 4. Document Matching & Integrity
 
-### Validation
+* 1-to-1 matching: one requirement has at most one file, and one file has at most one requirement.
+* Moving or undoing a match automatically cleans up associated expiry dates and detection state, preventing stale dates from bleeding into other documents.
 
-Each requirement has exactly one status, recalculated after every change:
+### 5. Status & Validation Engine
 
-| Status | Rule | Blocks generation |
+Each requirement is evaluated continuously:
+
+| Status | Rule | Blocks Package Generation? |
 |---|---|---|
-| Missing | `mandatory` and no file matched | Yes |
-| Expiry date needed | `has_expiry`, file matched, no expiry entered | Yes |
-| Expired | `has_expiry`, file matched, expiry before `submission_deadline` | Yes |
-| Not provided | not `mandatory` and no file matched | No |
-| OK | file matched and, if an expiry is required, expiry on or after `submission_deadline` | No |
+| **Missing** | `mandatory: true` and no file matched | Yes |
+| **Expiry date needed** | `has_expiry: true`, file matched, no date entered/chosen | Yes |
+| **Expired** | `has_expiry: true`, file matched, expiry date strictly before `submission_deadline` | Yes |
+| **Not provided** | `mandatory: false` and no file matched | No |
+| **OK** | File matched and, if expiry is required, date is on or after `submission_deadline` | No |
 
-An expiry equal to `submission_deadline` is **OK**. Dates are compared as plain `YYYY-MM-DD` values, so time zones do not affect the result.
+* **Expiry equal to submission deadline is OK**.
+* Comparisons use plain `YYYY-MM-DD` strings, ensuring time zone neutrality.
 
-The **Generate** button is disabled while any blocking status exists, and the page lists the reasons with counts.
+### 6. Package Generation
 
-### Package generation
+* Creates `<tender_id>_Package.pdf` using `pdf-lib`.
+* **Cover Page (Page 1)**: Tender ID, Title, Procuring Entity, Bidder, Submission Deadline, Generation Date, and table of included documents with their page ranges.
+* **Order Preservation**: Documents appear in required `order`, preserving all original source pages.
+* **Non-Overlapping Footers**: On source pages, a 34-point extension strip is added below the page (respecting rotation) where `<tender_id> | Page X of Y` is drawn. The original content is never obscured.
+* Post-generation verification validates that the final document's page count matches the expected total.
 
-The output file is `<tender_id>_Package.pdf` (characters other than letters, digits, `_`, `.`, and `-` in the ID are replaced with `_` in the filename).
+### 7. Bilingual UI
 
-1. **Page 1, English cover page:** tender ID, title, procuring entity, bidder, submission deadline, package creation date (the user's local date), and the included documents in required order with their page ranges in the package.
-2. **Matched documents only**, sorted by `order`, with every page of every source PDF in its original order. Optional requirements without a file are skipped.
-3. **Footer on every page, including the cover:** `<tender_id> | Page X of Y`, where Y is the total number of pages in the final package.
+* Instant switching between **English** and **বাংলা** via the header toggle.
+* All labels, statuses, instructions, detection banners, and error messages update immediately.
+* Cover page and footers in the generated PDF remain in English for official submission standards.
 
-How footers avoid covering content: for source pages, a 34-point strip is added outside the page's visible area (below it, adjusted for page rotation) and the footer is drawn there. Source content is not scaled or moved, so output pages are 34 points larger than their source pages. On the cover, the footer sits in the bottom margin.
+---
 
-After building, the app re-opens the generated PDF and checks that its page count matches the expected total.
+## Code Organisation
 
-### Bilingual UI
-
-- English and Bangla, switched with a prominent toggle in the header.
-- All interface text, statuses, and error messages follow the selected language. Document names use `title_en` or `title_bn`.
-- The generated cover and footer are always English.
-
-## Code organisation
-
-The application is a single file, but the script is divided into clearly separated sections. Business logic does not depend on the UI code.
-
-| Section | Responsibility |
+| Section / Object | Responsibility |
 |---|---|
-| `I18N` | English and Bangla text |
-| `Req`, `Day`, `Err` | Parsing and validating `requirements.json`; date normalisation; translatable errors |
-| `Pdf` | SHA-256 hashing, PDF validity and page counting |
-| `S`, `Model` | State (files, matches, expiry dates, language) and matching rules |
-| `Intake` | Upload pipeline: type check, limits, validation, page count, hash |
-| `Val` | Status engine and blocking counts |
-| `Gen` | Cover page, page assembly, footers, output check |
-| `UI` | Rendering |
-| `App` | Event handling, upload, generate, download |
+| `I18N` | English and Bangla localization strings for all UI states and detection notices |
+| `BN_DIGITS` / `toBnDigits` / `bnToEnDigits` | Numeral bidirectional converters for Bangla and Western digits |
+| `DateParser` | Candidate extraction (regexes), Bangla month maps, calendar validation, proximity scoring |
+| `Extractor` | Asynchronous browser-side PDF text extraction using `pdf.js` with per-file caching |
+| `Req`, `Day`, `Err` | Parsing and validation of `requirements.json`; date normalizer |
+| `Pdf` | SHA-256 hashing, PDF validation, and page count inspection |
+| `S`, `Model` | Application state (files, matches, expiries, detections) and matching rules |
+| `Intake` | Upload queue, file validation, limit enforcement, and hashing pipeline |
+| `Val` | Core status engine and blocking issue counts |
+| `Gen` | Package builder: cover page, page copying, rotation handling, margin strip footers |
+| `UI` | DOM rendering for header, file list, requirements table, detection banners, and gates |
+| `App` | Controller: event handling, upload, match, expiry detection, date picking/confirmation, generation |
 
-## Limitations and not implemented
+---
 
-Not implemented:
+## Limitations
 
-- Bonus features: index page, PNG seal or signature placement, CSV/Excel checklist export, save and reopen, Bangla text inside the PDF, filename-based auto-match suggestions, and AI assistance.
-- Persistence: state is held in memory and is lost when the page is reloaded.
-- Automated tests are not included in this repository.
+* **OCR / Scanned Documents**: Image-only scans without an embedded text layer cannot be parsed for text; the app prompts the user to enter the date manually.
+* **Cover & Footer Glyphs**: Built-in Helvetica fonts in the PDF generator only draw Latin characters; non-Latin characters in titles fallback to `?` on the generated cover/footer.
+* **Forms & Bookmarks**: Form field values and bookmarks from source PDFs are flattened or omitted in the combined output; page content and annotations are preserved.
+* **Browser Memory**: State is held in browser memory and resets on page reload.
 
-Known limitations:
+---
 
-- Non-Latin characters (for example Bangla in an English title field) print as `?` on the cover and in footers, because the built-in PDF font cannot draw them.
-- Form fields and bookmarks in source PDFs are not carried into the package. Page content, links, and annotations are copied.
-- A PDF that is structurally valid but has corrupted page content cannot be detected during upload and is copied as it is.
-- Very large inputs near the 50 MB limit are processed in browser memory and may be slow on low-memory machines.
+## Verification & Manual Testing Guide
 
-## Testing status
+To verify the application in Google Chrome:
 
-During development the logic was exercised with scripted tests (matching, validation edge cases including expiry equal to the deadline, upload limits, duplicate detection, damaged and encrypted PDFs, and package generation with rotated, cropped, and many-page inputs), and with a headless DOM run of the page. Those scripts are not part of this repository, and the application has not been verified in this README's author's environment beyond that. Please run a manual check in Chrome before relying on it:
-
-1. Load a `requirements.json` and upload all PDFs; check names, sizes, and page counts.
-2. Upload a renamed copy of a file and confirm the duplicate badge and the matching restriction.
-3. Upload a non-PDF, a damaged PDF, and a password-protected PDF.
-4. Match documents; enter expiry dates before, equal to, and after the deadline.
-5. Confirm Generate is disabled while anything is Missing, Expiry date needed, or Expired.
-6. Generate and open the PDF: check the cover, document order, total page count, and the footer on every page.
-7. Switch to Bangla and check the interface and error messages.
+1. **English Expiry Phrase + English Date**:
+   * Load a `requirements.json` with `submission_deadline: "2026-10-15"`.
+   * Match a PDF containing: `"Valid Until: 20/10/2027"`.
+   * Verify date auto-populates as `2027-10-20` with `✓ Expiry date detected automatically` and status **OK**.
+2. **Bangla Expiry Phrase + Bangla Numerals**:
+   * Match a PDF containing: `"মেয়াদ শেষের তারিখ: ২০/১০/২০২৭"`.
+   * Verify it normalizes and populates `2027-10-20`. Switch UI language to **বাংলা** and verify localized text.
+3. **Issue Date vs Expiry Date Disambiguation**:
+   * Match a PDF containing: `"Date of Issue: 20/10/2025\nValid Until: 20/10/2027"`.
+   * Verify the system selects `20/10/2027` (HIGH confidence) and places `20/10/2025` under "Other dates".
+4. **Bangla Issue Date + Bangla Expiry Date**:
+   * Match a PDF containing: `"ইস্যুর তারিখ: ২০/১০/২০২৫\nমেয়াদ শেষের তারিখ: ২০/১০/২০২৭"`.
+   * Verify `20/10/2027` is selected.
+5. **Multiple Candidate Dates / Suggestions**:
+   * Match a PDF with multiple dates without strong keywords (e.g. `"Audit dates: 20/10/2027 and 20/10/2028"`).
+   * Verify the field remains blank, displaying candidate buttons under `Possible expiry dates:`. Click a button to populate.
+6. **No Expiry Date**:
+   * Match a PDF with no dates.
+   * Verify message: `"Expiry date could not be detected automatically. Please enter it manually."`
+7. **Scanned / Image-Only PDF**:
+   * Match a scanned image-only PDF with no extractable text.
+   * Verify notice: `"Automatic expiry detection is unavailable for this scanned PDF. Please enter the expiry date manually."`
+8. **Expiry Equal to Submission Deadline**:
+   * Enter expiry equal to deadline (`2026-10-15`). Verify status badge shows **OK**.
+9. **Expired Document**:
+   * Enter expiry before deadline (`2026-05-10`). Verify status badge shows **Expired** and generation is blocked.
+10. **Future Expiry Date**:
+    * Enter expiry after deadline (`2027-10-20`). Verify status badge shows **OK**.
+11. **User Edits Detected Date**:
+    * Click **[Edit]** or pick a date in the date picker. Verify the status updates and remains confirmed.
+12. **Various Date Formats**:
+    * Test `20-10-2027`, `20.10.2027`, `2027-10-20`, `20 October 2027`, and `October 20, 2027`.
+    * Verify all correctly normalize to `2027-10-20`.

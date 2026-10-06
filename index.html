@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Tender Document Package Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --card: #fff;
+            --tx: #18212f;
+            --mu: #5b6678;
+            --bd: #d9dee7;
+            --pri: #1d4ed8;
+            --ok: #0f7b3f;
+            --okb: #dcf5e6;
+            --er: #b42318;
+            --erb: #fde4e1;
+            --wa: #8a5a00;
+            --wab: #fff0cc;
+            --gr: #4b5563;
+            --grb: #e8ebf0;
+            box-sizing: border-box;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px)
+        }
+
+        @media(prefers-color-scheme:dark) {
+            :root:not([data-theme=light]) {
+                --bg: #0f141c;
+                --card: #18202c;
+                --tx: #e8edf5;
+                --mu: #9aa6b8;
+                --bd: #2c3748;
+                --pri: #6b9cff;
+                --ok: #5dd28f;
+                --okb: #12341f;
+                --er: #ff8f85;
+                --erb: #3d1815;
+                --wa: #ffcb5c;
+                --wab: #3a2c0a;
+                --gr: #b5bfce;
+                --grb: #263040
+            }
+        }
+
+        :root[data-theme=dark] {
+            --bg: #0f141c;
+            --card: #18202c;
+            --tx: #e8edf5;
+            --mu: #9aa6b8;
+            --bd: #2c3748;
+            --pri: #6b9cff;
+            --ok: #5dd28f;
+            --okb: #12341f;
+            --er: #ff8f85;
+            --erb: #3d1815;
+            --wa: #ffcb5c;
+            --wab: #3a2c0a;
+            --gr: #b5bfce;
+            --grb: #263040
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--tx);
+            font: 15px/1.45 system-ui, "Noto Sans Bengali", "Segoe UI", sans-serif
+        }
+
+        header {
+            background: var(--card);
+            border-bottom: 1px solid var(--bd);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: space-between
+        }
+
+        h1 {
+            font-size: 19px;
+            margin: 0
+        }
+
+        h2 {
+            font-size: 16px;
+            margin: 0 0 10px
+        }
+
+        main {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            gap: 16px
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--bd);
+            border-radius: 8px;
+            padding: 16px
+        }
+
+        .steps {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: var(--mu)
+        }
+
+        .steps span {
+            background: var(--grb);
+            padding: 3px 9px;
+            border-radius: 99px
+        }
+
+        .lang {
+            display: flex;
+            border: 2px solid var(--pri);
+            border-radius: 8px;
+            overflow: hidden
+        }
+
+        .lang button {
+            border: 0;
+            background: none;
+            color: var(--pri);
+            padding: 7px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px
+        }
+
+        .lang button.on {
+            background: var(--pri);
+            color: #fff
+        }
+
+        .btn {
+            background: var(--pri);
+            color: #fff;
+            border: 0;
+            border-radius: 6px;
+            padding: 9px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+        .btn.sec {
+            background: none;
+            color: var(--pri);
+            border: 1px solid var(--pri)
+        }
+
+        .btn:disabled {
+            opacity: .45;
+            cursor: not-allowed
+        }
+
+        .btn.sm {
+            padding: 4px 10px;
+            font-weight: 500
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px
+        }
+
+        .k {
+            font-size: 12px;
+            color: var(--mu)
+        }
+
+        .v {
+            font-weight: 600
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 8px 6px;
+            border-bottom: 1px solid var(--bd);
+            vertical-align: middle
+        }
+
+        th {
+            font-size: 12px;
+            color: var(--mu);
+            text-transform: uppercase
+        }
+
+        select,
+        input[type=date] {
+            font: inherit;
+            padding: 6px;
+            border: 1px solid var(--bd);
+            border-radius: 6px;
+            background: var(--card);
+            color: var(--tx);
+            max-width: 100%
+        }
+
+        select:focus,
+        input:focus,
+        button:focus-visible {
+            outline: 2px solid var(--pri);
+            outline-offset: 1px
+        }
+
+        .b {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap
+        }
+
+        .OK {
+            background: var(--okb);
+            color: var(--ok)
+        }
+
+        .Missing,
+        .Expired {
+            background: var(--erb);
+            color: var(--er)
+        }
+
+        .Needed {
+            background: var(--wab);
+            color: var(--wa)
+        }
+
+        .NP {
+            background: var(--grb);
+            color: var(--gr)
+        }
+
+        .msg {
+            padding: 9px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 14px
+        }
+
+        .msg.e {
+            background: var(--erb);
+            color: var(--er)
+        }
+
+        .msg.w {
+            background: var(--wab);
+            color: var(--wa)
+        }
+
+        .msg.o {
+            background: var(--okb);
+            color: var(--ok)
+        }
+
+        .empty {
+            color: var(--mu);
+            padding: 14px;
+            text-align: center;
+            border: 1px dashed var(--bd);
+            border-radius: 6px
+        }
+
+        .drop {
+            border: 2px dashed var(--bd);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center
+        }
+
+        .tw {
+            overflow-x: auto
+        }
+
+        ul {
+            margin: 6px 0 0;
+            padding-left: 20px
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap
+        }
+
+        .exp-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 175px;
+        }
+
+        .exp-box {
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+
+        .exp-detected {
+            background: var(--okb);
+            border: 1px solid var(--ok);
+            color: var(--tx);
+        }
+
+        .exp-suggest {
+            background: var(--wab);
+            border: 1px solid var(--wa);
+            color: var(--tx);
+        }
+
+        .exp-none {
+            color: var(--mu);
+            border: 1px dashed var(--bd);
+            background: var(--grb);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>
+            <h1 id="appTitle"></h1>
+            <div class="steps" id="steps"></div>
+        </div>
+        <div class="lang" role="group" aria-label="Language"><button id="lEn"
+                onclick="UI.setLang('en')">English</button><button id="lBn" onclick="UI.setLang('bn')">বাংলা</button>
+        </div>
+    </header>
+    <main>
+        <section class="card">
+            <h2 id="h1s"></h2>
+            <div class="row">
+                <input type="file" id="reqIn" accept=".json,application/json" hidden>
+                <button class="btn" id="reqBtn" onclick="reqIn.click()"></button>
+                <span id="reqName" class="k"></span>
+                <input type="file" id="logoIn" accept="image/png,image/jpeg,.png,.jpg,.jpeg" hidden>
+                <button class="btn sec" id="logoBtn" onclick="logoIn.click()"></button>
+                <span id="logoPrev" class="row" style="gap:6px;align-items:center"></span>
+            </div>
+            <div id="logoMsg"></div>
+            <div id="reqMsg"></div>
+            <div id="tender" class="grid" style="margin-top:12px"></div>
+        </section>
+        <section class="card">
+            <h2 id="h2s"></h2>
+            <div class="drop"><input type="file" id="pdfIn" accept="application/pdf,.pdf" multiple hidden><button
+                    class="btn" id="pdfBtn" onclick="pdfIn.click()"></button>
+                <div class="k" id="limits" style="margin-top:6px"></div>
+            </div>
+            <div id="upSum" style="margin-top:10px"></div>
+            <div id="upMsg"></div>
+            <div class="tw" id="files"></div>
+        </section>
+        <section class="card">
+            <h2 id="h3s"></h2>
+            <div id="stSum" class="row" style="margin-bottom:10px"></div>
+            <div class="tw" id="reqs"></div>
+        </section>
+        <section class="card">
+            <h2 id="h4s"></h2>
+            <div id="why"></div>
+            <div class="row" style="margin-top:10px"><button class="btn" id="gen"
+                    onclick="App.generate()"></button><button class="btn sec" id="dl2" hidden
+                    onclick="App.save()"></button><span id="genMsg"></span></div>
+        </section>
+    </main>
+    <script>
+        /* ===== i18n / bilingual UI state ===== */
+        const I18N = {
+            en: { app: "Tender Document Package Builder", steps: ["1 Load requirements", "2 Upload PDFs", "3 Match documents", "4 Enter expiry dates", "5 Fix problems", "6 Generate", "7 Download"], s1: "1. Load requirements", s2: "2. Upload PDF documents", s3: "3. Match documents & enter expiry dates", s4: "4. Generate package", loadReq: "Open requirements.json", loadPdf: "Select PDF files", limits: "Up to 30 PDFs, 50 MB total. Files stay in your browser.", tid: "Tender ID", ttl: "Title", ent: "Procuring entity", bid: "Bidder", dl: "Submission deadline", noReq: "Load a requirements.json file to begin.", noFiles: "No PDFs uploaded yet.", fn: "File", sz: "Size", pg: "Pages", mt: "Matched to", dup: "Duplicate", rm: "Remove", none: "— not matched —", ord: "#", doc: "Document", mand: "Mandatory", opt: "Optional", file: "PDF file", exp: "Expiry date", st: "Status", sel: "— select file —", undo: "Undo", expNA: "Not required", dupOf: "Identical to: ", dupBlk: "(duplicate already matched elsewhere)", Missing: "Missing", Needed: "Expiry date needed", Expired: "Expired", NP: "Not provided", OK: "OK", gen: "Generate & download package", busy: "Building…", ready: "No blocking problems. You can generate the package.", blk: "Generation is disabled because:", needReq: "Load requirements.json first.", nonPdf: "is not a PDF file and was not added.", max30: "file(s) were not added: the 30-file limit is reached.", max50: "was not added: it would push the total over 50 MB.", bad: "could not be read: the file looks damaged or is not a valid PDF.", enc: "is password protected. Remove the password and upload it again.", empty: "is empty (0 bytes).", read: "could not be opened by the browser.", sumF: "files", sumS: "total", dupG: "Duplicate group", usedIn: "matched to #", nodup: "No duplicates", sumDup: "duplicate group(s) found", badJson: "Invalid requirements.json: ", done: "Package generated: ", saveFail: "Download was not completed.", dupWarn: "Duplicate files detected. Identical copies cannot be matched to different documents.", pages: "pages", cover: "Included documents", why: { Missing: "required document(s) missing", Needed: "expiry date(s) needed", Expired: "document(s) expired before the submission deadline" }, wait: "Reading files…", eJson: "The file is not valid JSON.", eShape: "The file must contain a 'tender' object and a 'requirements' list.", eDeadline: "tender.submission_deadline must be a valid date (YYYY-MM-DD).", eTid: "tender.tender_id is required.", eNoId: "Requirement #{x} has no id.", eDupId: "Duplicate requirement id: {x}", gMissing: "A matched file is no longer available.", gCount: "Page count mismatch in {x}.", gLoad: "Could not read {x} while building the package.", gCheck: "The generated PDF failed its page-count check.", dl2: "Download again", removed: "Requirement matches cleared for removed file.", autoExp: "✓ Expiry date detected automatically", useThis: "Use this date", edit: "Edit", confirmed: "Confirmed", possExp: "Possible expiry dates:", noExp: "Expiry date could not be detected automatically. Please enter it manually.", scannedPdf: "Automatic expiry detection is unavailable for this scanned PDF. Please enter the expiry date manually.", detecting: "Detecting expiry date…", otherExp: "Other dates", uploadLogo: "Upload logo (optional)", changeLogo: "Change logo", rmLogo: "Remove", badLogo: "Only PNG and JPG/JPEG images are supported.", loadLogoErr: "Could not load the logo image." },
+            bn: { app: "টেন্ডার ডকুমেন্ট প্যাকেজ বিল্ডার", steps: ["১ প্রয়োজনীয়তা লোড", "২ PDF আপলোড", "৩ ডকুমেন্ট মিলান", "৪ মেয়াদ লিখুন", "৫ সমস্যা সমাধান", "৬ তৈরি করুন", "৭ ডাউনলোড"], s1: "১. প্রয়োজনীয়তা লোড করুন", s2: "২. PDF ডকুমেন্ট আপলোড করুন", s3: "৩. ডকুমেন্ট মিলান ও মেয়াদ লিখুন", s4: "৪. প্যাকেজ তৈরি করুন", loadReq: "requirements.json খুলুন", loadPdf: "PDF ফাইল বাছাই করুন", limits: "সর্বোচ্চ ৩০টি PDF, মোট ৫০ MB। ফাইল আপনার ব্রাউজারেই থাকে।", tid: "টেন্ডার আইডি", ttl: "শিরোনাম", ent: "ক্রয়কারী প্রতিষ্ঠান", bid: "দরদাতা", dl: "জমাদানের শেষ তারিখ", noReq: "শুরু করতে requirements.json ফাইল লোড করুন।", noFiles: "এখনও কোনো PDF আপলোড হয়নি।", fn: "ফাইল", sz: "আকার", pg: "পৃষ্ঠা", mt: "মিলানো হয়েছে", dup: "ডুপ্লিকেট", rm: "মুছুন", none: "— মিলানো হয়নি —", ord: "#", doc: "ডকুমেন্ট", mand: "বাধ্যতামূলক", opt: "ঐচ্ছিক", file: "PDF ফাইল", exp: "মেয়াদ শেষের তারিখ", st: "অবস্থা", sel: "— ফাইল বাছাই —", undo: "বাতিল", expNA: "প্রয়োজন নেই", dupOf: "একই ফাইল: ", dupBlk: "(ডুপ্লিকেট অন্যত্র মিলানো আছে)", Missing: "অনুপস্থিত", Needed: "মেয়াদের তারিখ প্রয়োজন", Expired: "মেয়াদোত্তীর্ণ", NP: "প্রদান করা হয়নি", OK: "ঠিক আছে", gen: "প্যাকেজ তৈরি ও ডাউনলোড", busy: "তৈরি হচ্ছে…", ready: "কোনো বাধা নেই। প্যাকেজ তৈরি করা যাবে।", blk: "তৈরি করা যাচ্ছে না কারণ:", needReq: "আগে requirements.json লোড করুন।", nonPdf: "PDF ফাইল নয়, তাই যোগ করা হয়নি।", max30: "টি ফাইল যোগ করা হয়নি: ৩০টি ফাইলের সীমা পূর্ণ।", max50: "যোগ করা হয়নি: মোট আকার ৫০ MB ছাড়িয়ে যাবে।", bad: "পড়া যায়নি: ফাইলটি ক্ষতিগ্রস্ত বা বৈধ PDF নয়।", enc: "পাসওয়ার্ড সুরক্ষিত। পাসওয়ার্ড সরিয়ে আবার আপলোড করুন।", empty: "ফাইলটি খালি (০ বাইট)।", read: "ব্রাউজার ফাইলটি খুলতে পারেনি।", sumF: "ফাইল", sumS: "মোট", dupG: "ডুপ্লিকেট গ্রুপ", usedIn: "মিলানো আছে #", nodup: "কোনো ডুপ্লিকেট নেই", sumDup: "টি ডুপ্লিকেট গ্রুপ পাওয়া গেছে", badJson: "requirements.json সঠিক নয়: ", done: "প্যাকেজ তৈরি হয়েছে: ", saveFail: "ডাউনলোড সম্পন্ন হয়নি।", dupWarn: "ডুপ্লিকেট ফাইল পাওয়া গেছে। একই ফাইল ভিন্ন ডকুমেন্টে মিলানো যাবে না।", pages: "পৃষ্ঠা", cover: "অন্তর্ভুক্ত ডকুমেন্ট", why: { Missing: "বাধ্যতামূলক ডকুমেন্ট অনুপস্থিত", Needed: "মেয়াদের তারিখ প্রয়োজন", Expired: "ডকুমেন্টের মেয়াদ জমাদানের তারিখের আগে শেষ" }, wait: "ফাইল পড়া হচ্ছে…", eJson: "ফাইলটি বৈধ JSON নয়।", eShape: "ফাইলে 'tender' অবজেক্ট ও 'requirements' তালিকা থাকতে হবে।", eDeadline: "tender.submission_deadline একটি বৈধ তারিখ (YYYY-MM-DD) হতে হবে।", eTid: "tender.tender_id আবশ্যক।", eNoId: "{x} নম্বর requirement-এর id নেই।", eDupId: "requirement id দুইবার আছে: {x}", gMissing: "মিলানো একটি ফাইল আর পাওয়া যাচ্ছে না।", gCount: "{x} ফাইলের পৃষ্ঠা সংখ্যা মেলেনি।", gLoad: "প্যাকেজ তৈরির সময় {x} পড়া যায়নি।", gCheck: "তৈরি PDF-এর পৃষ্ঠা সংখ্যা যাচাই ব্যর্থ হয়েছে।", dl2: "আবার ডাউনলোড", removed: "", autoExp: "✓ মেয়াদ শেষের তারিখ স্বয়ংক্রিয়ভাবে সনাক্ত হয়েছে", useThis: "এই তারিখটি ব্যবহার করুন", edit: "সম্পাদনা", confirmed: "নিশ্চিত", possExp: "সম্ভাব্য মেয়াদ শেষের তারিখ:", noExp: "মেয়াদ শেষের তারিখ স্বয়ংক্রিয়ভাবে সনাক্ত করা যায়নি। অনুগ্রহ করে হাতে লিখুন।", scannedPdf: "স্বয়ংক্রিয় সনাক্তকরণ এই স্ক্যান করা PDF-এর জন্য অনুপলব্ধ। অনুগ্রহ করে হাতে মেয়াদ লিখুন।", detecting: "মেয়াদ শেষের তারিখ খোঁজা হচ্ছে…", otherExp: "অন্যান্য তারিখ", uploadLogo: "লোগো আপলোড (ঐচ্ছিক)", changeLogo: "লোগো পরিবর্তন", rmLogo: "মুছুন", badLogo: "শুধুমাত্র PNG এবং JPG/JPEG ছবি সমর্থিত।", loadLogoErr: "লোগো ছবিটি লোড করা যায়নি।" }
+        };
+        /* ===== PDF.js text extraction & Date parser ===== */
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        }
+        const BN_DIGITS = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
+        const EN_TO_BN = { '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯' };
+        const bnToEnDigits = s => String(s || "").replace(/[০-৯]/g, d => BN_DIGITS[d] || d);
+        const toBnDigits = s => String(s || "").replace(/[0-9]/g, d => EN_TO_BN[d] || d);
+
+        const DateParser = {
+            MONTHS_LIST: [
+                "january", "jan", "february", "feb", "march", "mar", "april", "apr",
+                "may", "june", "jun", "july", "jul", "august", "aug", "september", "sep", "sept",
+                "october", "oct", "november", "nov", "december", "dec",
+                "জানুয়ারি", "জানুয়ারি", "জানুয়ারী", "জানুয়ারী",
+                "ফেব্রুয়ারি", "ফেব্রুয়ারি", "ফেব্রুয়ারী", "ফেব্রুয়ারী",
+                "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই",
+                "আগস্ট", "অগাস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+            ],
+            MONTH_MAP: {
+                january: 1, jan: 1, february: 2, feb: 2, march: 3, mar: 3, april: 4, apr: 4,
+                may: 5, june: 6, jun: 6, july: 7, jul: 7, august: 8, aug: 8,
+                september: 9, sep: 9, sept: 9, october: 10, oct: 10, november: 11, nov: 11, december: 12,
+                "জানুয়ারি": 1, "জানুয়ারি": 1, "জানুয়ারী": 1, "জানুয়ারী": 1,
+                "ফেব্রুয়ারি": 2, "ফেব্রুয়ারি": 2, "ফেব্রুয়ারী": 2, "ফেব্রুয়ারী": 2,
+                "মার্চ": 3, "এপ্রিল": 4, "মে": 5, "জুন": 6, "জুলাই": 7,
+                "আগস্ট": 8, "অগাস্ট": 8, "সেপ্টেম্বর": 9, "অক্টোবর": 10, "নভেম্বর": 11, "ডিসেম্বর": 12
+            },
+            makeValid(y, m, d) {
+                y = +y; m = +m; d = +d;
+                if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return null;
+                if (y < 1950 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+                const dt = new Date(Date.UTC(y, m - 1, d));
+                if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+                return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            },
+            formatDisplay(iso) {
+                if (!iso) return "";
+                const [y, m, d] = iso.split("-");
+                return `${d}/${m}/${y}`;
+            },
+            EXPIRY_STRONG: [
+                "expiry date", "expiration date", "date of expiry", "expires on", "expires",
+                "valid until", "valid till", "valid up to", "valid through", "valid upto",
+                "মেয়াদ শেষের তারিখ", "মেয়াদ শেষের তারিখ",
+                "মেয়াদ উত্তীর্ণের তারিখ", "মেয়াদ উত্তীর্ণের তারিখ",
+                "মেয়াদোত্তীর্ণের তারিখ", "মেয়াদোত্তীর্ণের তারিখ"
+            ],
+            VALIDITY: [
+                "validity date", "validity period", "validity", "valid for",
+                "expiry", "expiration",
+                "বৈধতার তারিখ", "বৈধতার মেয়াদ", "বৈধতার মেয়াদ", "বৈধতার সীমা", "বৈধতা",
+                "মেয়াদ", "মেয়াদ"
+            ],
+            ISSUE: [
+                "date of issue", "issue date", "issued on", "date issued", "issuance date",
+                "date of issuance", "issued",
+                "ইস্যুর তারিখ", "ইস্যু তারিখ", "প্রদানের তারিখ", "ইস্যু"
+            ],
+            extractCandidates(rawText) {
+                if (!rawText || !rawText.trim()) return [];
+                const normText = bnToEnDigits(rawText);
+                const candidates = [];
+
+                const rYMD = /\b(19\d\d|20\d\d)[-/.](0?[1-9]|1[0-2])[-/.](0?[1-9]|[12]\d|3[01])\b/g;
+                let m;
+                while ((m = rYMD.exec(normText)) !== null) {
+                    const iso = DateParser.makeValid(m[1], m[2], m[3]);
+                    if (iso) candidates.push({ index: m.index, length: m[0].length, raw: m[0], isoDate: iso });
+                }
+
+                const rDMY = /\b(0?[1-9]|[12]\d|3[01])[-/.](0?[1-9]|1[0-2])[-/.](19\d\d|20\d\d)\b/g;
+                while ((m = rDMY.exec(normText)) !== null) {
+                    const iso = DateParser.makeValid(m[3], m[2], m[1]);
+                    if (iso) candidates.push({ index: m.index, length: m[0].length, raw: m[0], isoDate: iso });
+                }
+
+                const mPart = DateParser.MONTHS_LIST.join("|");
+                const rDMonthY = new RegExp(`\\b(0?[1-9]|[12]\\d|3[01])(?:st|nd|rd|th|শে|ই|এ|রা|লা)?\\s*[-/.,]?\\s*(${mPart})\\s*[-/.,]?\\s*(19\\d\\d|20\\d\\d)\\b`, "gi");
+                while ((m = rDMonthY.exec(normText)) !== null) {
+                    const d = m[1], moName = m[2].toLowerCase(), y = m[3];
+                    const mo = DateParser.MONTH_MAP[moName];
+                    if (mo) {
+                        const iso = DateParser.makeValid(y, mo, d);
+                        if (iso) candidates.push({ index: m.index, length: m[0].length, raw: m[0], isoDate: iso });
+                    }
+                }
+
+                const rMonthDY = new RegExp(`\\b(${mPart})\\s+([0-3]?\\d)(?:st|nd|rd|th|শে|ই|এ|রা|লা)?(?:\\s*,\\s*|\\s+)(19\\d\\d|20\\d\\d)\\b`, "gi");
+                while ((m = rMonthDY.exec(normText)) !== null) {
+                    const moName = m[1].toLowerCase(), d = m[2], y = m[3];
+                    const mo = DateParser.MONTH_MAP[moName];
+                    if (mo) {
+                        const iso = DateParser.makeValid(y, mo, d);
+                        if (iso) candidates.push({ index: m.index, length: m[0].length, raw: m[0], isoDate: iso });
+                    }
+                }
+
+                const unique = [];
+                const seen = new Set();
+                for (const c of candidates) {
+                    const key = `${c.index}-${c.isoDate}`;
+                    if (!seen.has(key)) { seen.add(key); unique.push(c) }
+                }
+                return unique;
+            },
+            scoreCandidates(candidates, text) {
+                if (!candidates.length) return [];
+                const lowerText = text.toLowerCase();
+                const scored = candidates.map(c => {
+                    const startWindow = Math.max(0, c.index - 80);
+                    const endWindow = Math.min(lowerText.length, c.index + c.length + 30);
+                    const windowBefore = lowerText.substring(startWindow, c.index);
+                    const windowAfter = lowerText.substring(c.index + c.length, endWindow);
+
+                    let bestExpiryDist = Infinity, bestExpiryKw = null, bestExpiryType = null;
+                    for (const kw of DateParser.EXPIRY_STRONG) {
+                        const kwLower = kw.toLowerCase();
+                        const idx = windowBefore.lastIndexOf(kwLower);
+                        if (idx !== -1) {
+                            const dist = windowBefore.length - (idx + kwLower.length);
+                            if (dist < bestExpiryDist) { bestExpiryDist = dist; bestExpiryKw = kw; bestExpiryType = "EXPIRY_STRONG" }
+                        }
+                    }
+                    for (const kw of DateParser.VALIDITY) {
+                        const kwLower = kw.toLowerCase();
+                        const idx = windowBefore.lastIndexOf(kwLower);
+                        if (idx !== -1) {
+                            const dist = windowBefore.length - (idx + kwLower.length);
+                            if (dist < bestExpiryDist) { bestExpiryDist = dist; bestExpiryKw = kw; bestExpiryType = "VALIDITY" }
+                        }
+                    }
+                    if (!bestExpiryKw) {
+                        for (const kw of DateParser.EXPIRY_STRONG) {
+                            const kwLower = kw.toLowerCase();
+                            const idx = windowAfter.indexOf(kwLower);
+                            if (idx !== -1 && idx < 20) { bestExpiryDist = idx + 10; bestExpiryKw = kw; bestExpiryType = "EXPIRY_STRONG"; break }
+                        }
+                    }
+
+                    let bestIssueDist = Infinity, bestIssueKw = null;
+                    for (const kw of DateParser.ISSUE) {
+                        const kwLower = kw.toLowerCase();
+                        const idx = windowBefore.lastIndexOf(kwLower);
+                        if (idx !== -1) {
+                            const dist = windowBefore.length - (idx + kwLower.length);
+                            if (dist < bestIssueDist) { bestIssueDist = dist; bestIssueKw = kw }
+                        }
+                    }
+
+                    let score = 10, matchedKeyword = null, matchedType = "NONE";
+                    if (bestIssueKw && bestIssueDist <= 40 && bestIssueDist < bestExpiryDist) {
+                        score = -50; matchedKeyword = bestIssueKw; matchedType = "ISSUE";
+                    } else if (bestExpiryType === "EXPIRY_STRONG") {
+                        score = bestExpiryDist <= 35 ? 100 : 80; matchedKeyword = bestExpiryKw; matchedType = "EXPIRY_STRONG";
+                    } else if (bestExpiryType === "VALIDITY") {
+                        score = bestExpiryDist <= 35 ? 65 : 45; matchedKeyword = bestExpiryKw; matchedType = "VALIDITY";
+                    }
+
+                    const confidence = score >= 75 ? "HIGH" : score >= 40 ? "MEDIUM" : "LOW";
+                    return { ...c, score, confidence, matchedKeyword, matchedType, displayDate: DateParser.formatDisplay(c.isoDate) };
+                });
+
+                scored.sort((a, b) => b.score - a.score || b.isoDate.localeCompare(a.isoDate));
+                return scored;
+            }
+        };
+
+        const Extractor = {
+            async getText(file) {
+                if (file._text !== undefined) return file._text;
+                if (!window.pdfjsLib) { file._text = ""; return "" }
+                try {
+                    const data = new Uint8Array(file.buf.slice(0));
+                    const loadingTask = pdfjsLib.getDocument({ data, useWorkerFetch: false, isEvalSupported: false, useSystemFonts: true });
+                    const doc = await loadingTask.promise;
+                    let fullText = "";
+                    for (let i = 1; i <= doc.numPages; i++) {
+                        const page = await doc.getPage(i);
+                        const content = await page.getTextContent();
+                        const pageLines = [];
+                        let curLine = "";
+                        for (const item of content.items) {
+                            if (!item || typeof item.str !== "string") continue;
+                            if (item.hasEOL) { curLine += (curLine ? " " : "") + item.str; pageLines.push(curLine); curLine = "" }
+                            else { curLine += (curLine ? " " : "") + item.str }
+                        }
+                        if (curLine) pageLines.push(curLine);
+                        fullText += (fullText ? "\n\n" : "") + pageLines.join("\n");
+                    }
+                    file._text = fullText;
+                    return fullText;
+                } catch (e) {
+                    console.warn("PDF text extraction:", e);
+                    file._text = "";
+                    return "";
+                }
+            }
+        };
+        /* ===== requirements loading / parsing ===== */
+        const Day = s => { const m = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/.exec(String(s ?? "").trim()); if (!m) return null; const y = +m[1], mo = +m[2], d = +m[3], dt = new Date(Date.UTC(y, mo - 1, d)); return dt.getUTCFullYear() === y && dt.getUTCMonth() === mo - 1 && dt.getUTCDate() === d ? m[1] + "-" + m[2] + "-" + m[3] : null };
+        const B = v => v === true || v === "true" || v === 1 || v === "1";
+        const Err = (code, arg) => Object.assign(new Error(code + (arg != null ? ": " + arg : "")), { code, arg });
+        const Req = {
+            parse(text) {
+                text = String(text).replace(/^\uFEFF/, ""); let j; try { j = JSON.parse(text) } catch (e) { throw Err("eJson") }
+                if (!j || typeof j.tender !== "object" || j.tender === null || !Array.isArray(j.requirements)) throw Err("eShape");
+                if (j.tender.tender_id == null || String(j.tender.tender_id).trim() === "") throw Err("eTid");
+                const dd = Day(j.tender.submission_deadline); if (!dd) throw Err("eDeadline"); j.tender.submission_deadline = dd;
+                const ids = new Set(); const reqs = j.requirements.map((r, i) => {
+                    if (!r || r.id == null) throw Err("eNoId", i + 1); const id = String(r.id); if (ids.has(id)) throw Err("eDupId", id); ids.add(id);
+                    return { id, order: Number(r.order), title_en: String(r.title_en ?? r.id), title_bn: String(r.title_bn ?? r.title_en ?? r.id), mandatory: B(r.mandatory), has_expiry: B(r.has_expiry) }
+                });
+                reqs.forEach((r, i) => { if (!isFinite(r.order)) r.order = i + 1 }); reqs.sort((a, b) => a.order - b.order);
+                return { tender: j.tender, requirements: reqs }
+            }
+        };
+        /* ===== PDF file mgmt: hash + page count ===== */
+        const LIM = { files: 30, bytes: 52428800 };
+        const Pdf = {
+            async sha256(buf) { const h = await crypto.subtle.digest("SHA-256", buf); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join("") },
+            async inspect(buf) {
+                if (!buf.byteLength) throw { kind: "empty" };
+                const head = new TextDecoder("latin1").decode(new Uint8Array(buf.slice(0, 1024))); if (!head.includes("%PDF-")) throw { kind: "bad" };
+                let d; try { d = await PDFLib.PDFDocument.load(buf, { throwOnInvalidObject: false }) } catch (e) { throw { kind: /encrypt/i.test((e && e.message) || "") || (e && e.name === "EncryptedPDFError") ? "enc" : "bad" } }
+                let n; try { n = d.getPageCount() } catch (e) { throw { kind: "bad" } } if (!(n >= 1)) throw { kind: "bad" }; return n
+            }
+        };
+        const fmt = n => n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+        /* ===== state: files, matching, expiry ===== */
+        const ND = () => Object.create(null);
+        const S = { req: null, files: [], match: ND(), expiry: ND(), detection: ND(), logo: null, lang: "en", nid: 1 };
+        const Model = {
+            dupGroup(f) { return S.files.filter(g => g.hash === f.hash) },
+            dupOthers(f) { return S.files.filter(g => g.hash === f.hash && g.id !== f.id) },
+            dupGroups() { const m = {}; S.files.forEach(f => (m[f.hash] = m[f.hash] || []).push(f)); return Object.values(m).filter(g => g.length > 1) },
+            dupLabel(f) { const i = Model.dupGroups().findIndex(g => g.some(x => x.id === f.id)); return i < 0 ? "" : String.fromCharCode(65 + i % 26) + (i >= 26 ? Math.floor(i / 26) : "") },
+            fileReq(fid) { return Object.keys(S.match).find(r => S.match[r] === fid) },
+            groupMatchedElsewhere(f, rid) { return Model.dupOthers(f).some(g => { const r = Model.fileReq(g.id); return r && r !== rid }) },
+            setMatch(rid, fid) {
+                if (S.req && !S.req.requirements.some(r => r.id === rid)) return false; const cur = S.match[rid];
+                if (!fid) { if (cur) { delete S.match[rid]; delete S.expiry[rid]; delete S.detection[rid] } return true }
+                const f = S.files.find(x => x.id === fid); if (!f || Model.groupMatchedElsewhere(f, rid)) return false; if (cur === fid) return true;
+                const old = Model.fileReq(fid); if (old) { delete S.match[old]; delete S.expiry[old]; delete S.detection[old] }
+                S.match[rid] = fid; delete S.expiry[rid]; delete S.detection[rid]; return true
+            },
+            removeFile(fid) { const r = Model.fileReq(fid); if (r) { delete S.match[r]; delete S.expiry[r]; delete S.detection[r] } S.files = S.files.filter(f => f.id !== fid) }
+        };
+        /* ===== intake pipeline: validate -> limits -> page count -> hash. Calls are queued so limits stay exact. ===== */
+        const Intake = {
+            _q: Promise.resolve(), bytes: () => S.files.reduce((a, x) => a + x.size, 0),
+            add(list, cb) { const r = Intake._q.then(() => Intake.run(list, cb)); Intake._q = r.catch(() => { }); return r },
+            async run(list, cb) {
+                const errs = [], n = list.length;
+                for (let i = 0; i < n; i++) {
+                    const f = list[i]; cb && cb(i + 1, n, f.name);
+                    if (!(f.type === "application/pdf" || /\.pdf$/i.test(f.name))) { errs.push({ kind: "nonPdf", name: f.name }); continue }
+                    if (S.files.length >= LIM.files) { errs.push({ kind: "max30", name: f.name }); continue }
+                    if (Intake.bytes() + f.size > LIM.bytes) { errs.push({ kind: "max50", name: f.name }); continue }
+                    try { const buf = await f.arrayBuffer(), pages = await Pdf.inspect(buf), hash = await Pdf.sha256(buf); S.files.push({ id: S.nid++, name: f.name, size: f.size, pages, hash, buf }) }
+                    catch (e) { errs.push({ kind: (e && e.kind) || "read", name: f.name }) }
+                }
+                cb && cb(n, n, ""); return errs
+            }
+        };
+        /* ===== validation engine ===== */
+        const Val = {
+            status(r) {
+                const f = S.match[r.id]; if (!f) return r.mandatory ? "Missing" : "NP";
+                if (r.has_expiry) { const e = Day(S.expiry[r.id]), d = Day(S.req.tender.submission_deadline); if (!e) return "Needed"; if (e < d) return "Expired" } return "OK"
+            },
+            all() { return S.req ? S.req.requirements.map(r => ({ r, s: Val.status(r) })) : [] },
+            blocking() { const c = { Missing: 0, Needed: 0, Expired: 0 }; Val.all().forEach(x => { if (c[x.s] !== undefined) c[x.s]++ }); return c }
+        };
+        /* ===== package generation ===== */
+        const Gen = {
+            FH: 34,
+            clean(s) { const m = { "\u2018": "'", "\u2019": "'", "\u201C": '"', "\u201D": '"', "\u2013": "-", "\u2014": "-", "\u2022": "*", "\u2026": "..." }; return String(s ?? "").replace(/[\u2018\u2019\u201C\u201D\u2013\u2014\u2022\u2026]/g, c => m[c]).replace(/\s+/g, " ").trim().replace(/[^\x20-\x7E\xA0-\xFF]/g, "?") },
+            wrap(t, font, size, max) {
+                const out = []; let line = ""; for (let w of t.split(" ")) {
+                    const c = line ? line + " " + w : w; if (font.widthOfTextAtSize(c, size) <= max) { line = c; continue }
+                    if (line) out.push(line); while (font.widthOfTextAtSize(w, size) > max && w.length > 1) { let k = w.length; while (k > 1 && font.widthOfTextAtSize(w.slice(0, k), size) > max) k--; out.push(w.slice(0, k)); w = w.slice(k) } line = w
+                }
+                if (line) out.push(line); return out.length ? out : [""]
+            },
+            trunc(t, font, size, max) { if (font.widthOfTextAtSize(t, size) <= max) return t; while (t.length > 1 && font.widthOfTextAtSize(t + "...", size) > max) t = t.slice(0, -1); return t + "..." },
+            /* Footer goes in an added strip outside the page's visible area (or the bottom margin of the cover), so source content is never covered. Handles /Rotate. */
+            footer(p, font, text, extend) {
+                const FH = Gen.FH, rgb = PDFLib.rgb, deg = PDFLib.degrees;
+                if (!extend) { const w = font.widthOfTextAtSize(text, 10), W = p.getWidth(); p.drawText(text, { x: (W - w) / 2, y: 22, size: 10, font, color: rgb(.15, .15, .15) }); return }
+                const rot = ((Math.round(p.getRotation().angle / 90) * 90) % 360 + 360) % 360, mb = p.getMediaBox(); let b = p.getCropBox();
+                const x0 = Math.max(b.x, mb.x), y0 = Math.max(b.y, mb.y), x1 = Math.min(b.x + b.width, mb.x + mb.width), y1 = Math.min(b.y + b.height, mb.y + mb.height);
+                b = (x1 > x0 && y1 > y0) ? { x: x0, y: y0, width: x1 - x0, height: y1 - y0 } : mb;
+                const n = { 0: { x: b.x, y: b.y - FH, w: b.width, h: b.height + FH }, 90: { x: b.x, y: b.y, w: b.width + FH, h: b.height }, 180: { x: b.x, y: b.y, w: b.width, h: b.height + FH }, 270: { x: b.x - FH, y: b.y, w: b.width + FH, h: b.height } }[rot];
+                p.setMediaBox(n.x, n.y, n.w, n.h); p.setCropBox(n.x, n.y, n.w, n.h); p.setTrimBox(n.x, n.y, n.w, n.h); p.setBleedBox(n.x, n.y, n.w, n.h); p.setArtBox(n.x, n.y, n.w, n.h);
+                const r = { 0: [b.x, b.y - FH, b.width, FH], 90: [b.x + b.width, b.y, FH, b.height], 180: [b.x, b.y + b.height, b.width, FH], 270: [b.x - FH, b.y, FH, b.height] }[rot];
+                p.drawRectangle({ x: r[0], y: r[1], width: r[2], height: r[3], color: rgb(1, 1, 1), borderWidth: 0 });
+                const vw = rot % 180 ? b.height : b.width; let sz = 10; const w0 = font.widthOfTextAtSize(text, sz); if (w0 > vw - 20) sz = Math.max(4, sz * (vw - 20) / w0); const w = font.widthOfTextAtSize(text, sz);
+                const pos = { 0: { x: b.x + (vw - w) / 2, y: b.y - FH + 12 }, 90: { x: b.x + b.width + FH - 12, y: b.y + (b.height - w) / 2 }, 180: { x: b.x + (b.width + w) / 2, y: b.y + b.height + FH - 12 }, 270: { x: b.x - FH + 12, y: b.y + (b.height + w) / 2 } }[rot];
+                p.drawText(text, { x: pos.x, y: pos.y, size: sz, font, color: rgb(.15, .15, .15), rotate: deg(rot) })
+            },
+            async build() {
+                const { tender, requirements } = S.req;
+                const items = requirements.filter(r => S.match[r.id]).map(r => ({ r, f: S.files.find(f => f.id === S.match[r.id]) }));
+                if (items.some(i => !i.f)) throw Err("gMissing");
+                const out = await PDFLib.PDFDocument.create(), font = await out.embedFont(PDFLib.StandardFonts.Helvetica), bold = await out.embedFont(PDFLib.StandardFonts.HelveticaBold), ink = PDFLib.rgb(.1, .13, .2);
+                const tid = Gen.clean(tender.tender_id); out.setTitle(Gen.clean(tender.title) || tid); out.setCreator("Tender Document Package Builder");
+                const cov = out.addPage([595.28, 841.89]), L = 50, W = 495; let y = 790;
+                if (S.logo && S.logo.bytes) {
+                    try {
+                        const b = S.logo.bytes;
+                        const img = (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47)
+                            ? await out.embedPng(b)
+                            : await out.embedJpg(b);
+                        const maxW = 180, maxH = 50;
+                        const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+                        const drawW = img.width * scale, drawH = img.height * scale;
+                        y = 795;
+                        cov.drawImage(img, { x: L, y: y - drawH, width: drawW, height: drawH });
+                        y = y - drawH - 26;
+                    } catch (e) {
+                        y = 790;
+                    }
+                }
+                cov.drawText("TENDER DOCUMENT PACKAGE", { x: L, y, size: 20, font: bold, color: ink }); y -= 34;
+                const d = new Date(), made = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                const kv = (k, v) => { cov.drawText(k + ":", { x: L, y, size: 10.5, font: bold, color: ink }); const ls = Gen.wrap(Gen.clean(v) || "-", font, 10.5, W - 135); ls.forEach((l, i) => cov.drawText(l, { x: L + 135, y: y - i * 14, size: 10.5, font, color: ink })); y -= ls.length * 14 + 6 };
+                kv("Tender ID", tender.tender_id); kv("Title", tender.title); kv("Procuring entity", tender.procuring_entity); kv("Bidder", tender.bidder); kv("Submission deadline", tender.submission_deadline); kv("Package created", made);
+                y -= 10; cov.drawText("Included documents (in required order)", { x: L, y, size: 13, font: bold, color: ink }); y -= 22;
+                let pg = 2; items.forEach((it, i) => { it.start = pg; it.end = pg + it.f.pages - 1; pg = it.end + 1; it.text = Gen.clean(`${i + 1}. ${it.r.title_en}`) });
+                if (!items.length) cov.drawText("(no documents)", { x: L, y, size: 10, font, color: ink });
+                else {
+                    let lay; for (const [sz, lh, wr] of [[10, 15, 1], [9, 13, 1], [8, 11, 1], [8, 11, 0]]) {
+                        const ls = items.map(it => wr ? Gen.wrap(it.text, font, sz, W - 75) : [Gen.trunc(it.text, font, sz, W - 75)]);
+                        if (!wr || y - ls.reduce((a, l) => a + l.length * lh + 3, 0) >= 62) { lay = { sz, lh, ls }; break }
+                    }
+                    items.forEach((it, i) => { const pr = it.start === it.end ? `p. ${it.start}` : `pp. ${it.start}-${it.end}`; lay.ls[i].forEach((l, j) => { cov.drawText(l, { x: L, y, size: lay.sz, font, color: ink }); if (j === 0) cov.drawText(pr, { x: L + W - font.widthOfTextAtSize(pr, lay.sz), y, size: lay.sz, font, color: ink }); y -= lay.lh }); y -= 3 })
+                }
+                const all = [cov];
+                for (const it of items) {
+                    let src; try { src = await PDFLib.PDFDocument.load(it.f.buf) } catch (e) { throw Err("gLoad", it.f.name) }
+                    const ps = await out.copyPages(src, src.getPageIndices()); if (ps.length !== it.f.pages) throw Err("gCount", it.f.name); ps.forEach(p => { out.addPage(p); all.push(p) })
+                }
+                const total = all.length; all.forEach((p, i) => Gen.footer(p, font, `${tid} | Page ${i + 1} of ${total}`, i > 0));
+                const bytes = await out.save(); const chk = await PDFLib.PDFDocument.load(bytes); if (chk.getPageCount() !== total) throw Err("gCheck");
+                return { bytes, total }
+            }
+        };
+        /* ===== UI ===== */
+        const $ = id => document.getElementById(id), T = k => I18N[S.lang][k], esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+        const errText = e => e && e.code && I18N.en[e.code] ? T(e.code).replace("{x}", e.arg ?? "") : String((e && e.message) || e);
+        const title = r => S.lang === "bn" ? r.title_bn : r.title_en;
+        const UI = {
+            setLang(l) { S.lang = l; document.documentElement.lang = l; UI.render() },
+            msg(id, cls, html) { $(id).innerHTML = html ? `<div class="msg ${cls}" role="alert">${html}</div>` : "" },
+            render() {
+                const t = I18N[S.lang]; $("appTitle").textContent = t.app; document.title = t.app; $("steps").innerHTML = t.steps.map(s => `<span>${s}</span>`).join("");
+                $("lEn").className = S.lang === "en" ? "on" : ""; $("lBn").className = S.lang === "bn" ? "on" : "";
+                $("h1s").textContent = t.s1; $("h2s").textContent = t.s2; $("h3s").textContent = t.s3; $("h4s").textContent = t.s4; $("reqBtn").textContent = t.loadReq; $("pdfBtn").textContent = t.loadPdf; $("limits").textContent = t.limits;
+                $("logoBtn").textContent = S.logo ? t.changeLogo : t.uploadLogo;
+                $("logoPrev").innerHTML = S.logo ? `<img src="${S.logo.url}" alt="Logo" style="max-height:28px;max-width:80px;border-radius:3px;object-fit:contain;vertical-align:middle;border:1px solid var(--bd)"><button class="btn sm sec" onclick="App.removeLogo()" title="${t.rmLogo}" aria-label="${t.rmLogo}">✕ ${t.rmLogo}</button>` : "";
+                if (S.req) { const x = S.req.tender; $("tender").innerHTML = [["tid", x.tender_id], ["ttl", x.title], ["ent", x.procuring_entity], ["bid", x.bidder], ["dl", x.submission_deadline]].map(([k, v]) => `<div><div class="k">${t[k]}</div><div class="v">${esc(v ?? "—")}</div></div>`).join("") } else $("tender").innerHTML = "";
+                UI.files(); UI.reqs(); UI.gate()
+            },
+            files() {
+                const t = I18N[S.lang], g = Model.dupGroups(), tot = Intake.bytes();
+                $("upSum").innerHTML = `<b>${S.files.length}/${LIM.files}</b> ${t.sumF} · ${t.sumS} <b>${fmt(tot)}</b> / 50 MB · ` + (g.length ? `<span class="b Needed">${g.length} ${t.sumDup}</span>` : `<span class="k">${t.nodup}</span>`);
+                if (!S.files.length) { $("files").innerHTML = `<div class="empty" style="margin-top:10px">${t.noFiles}</div>`; return }
+                $("files").innerHTML = `<table style="margin-top:10px"><tr><th>${t.fn}</th><th>${t.sz}</th><th>${t.pg}</th><th>${t.mt}</th><th>${t.dup}</th><th></th></tr>` + S.files.map(f => {
+                    const rid = Model.fileReq(f.id), r = rid && S.req && S.req.requirements.find(x => x.id === rid), d = Model.dupOthers(f);
+                    return `<tr><td>${esc(f.name)}</td><td>${fmt(f.size)}</td><td>${f.pages}</td><td>${r ? esc(title(r)) : `<span class="k">${t.none}</span>`}</td><td>${d.length ? `<span class="b Needed">${t.dupG} ${Model.dupLabel(f)}</span><div class="k">${t.dupOf}${d.map(x => esc(x.name)).join(", ")}</div>` : "—"}</td><td><button class="btn sm sec" onclick="App.remove(${f.id})">${t.rm}</button></td></tr>`
+                }).join("") + "</table>"
+            },
+            reqs() {
+                const t = I18N[S.lang]; if (!S.req) { $("reqs").innerHTML = `<div class="empty">${t.noReq}</div>`; return }
+                $("reqs").innerHTML = `<table><tr><th>${t.ord}</th><th>${t.doc}</th><th>${t.file}</th><th>${t.exp}</th><th>${t.st}</th></tr>` + S.req.requirements.map((r, i) => {
+                    const st = Val.status(r), fid = S.match[r.id], det = S.detection[r.id];
+                    const opts = S.files.map(f => { const blocked = Model.groupMatchedElsewhere(f, r.id), u = Model.fileReq(f.id), ur = u && u !== r.id && S.req.requirements.find(x => x.id === u); return `<option value="${f.id}" ${fid === f.id ? "selected" : ""} ${blocked ? "disabled" : ""}>${esc(f.name)}${ur ? " — " + t.usedIn + ur.order : ""}${blocked && !ur ? " " + t.dupBlk : ""}</option>` }).join("");
+                    let detHtml = "";
+                    if (det) {
+                        if (det.status === "detecting") {
+                            detHtml = `<div class="exp-box k">⌛ ${t.detecting}</div>`;
+                        } else if (det.status === "detected") {
+                            const disp = S.lang === "bn" ? toBnDigits(det.displayDate) : det.displayDate;
+                            detHtml = `<div class="exp-box exp-detected">
+                                <div class="row" style="gap:4px;justify-content:space-between;align-items:center">
+                                    <span style="font-weight:600;color:var(--ok)">${t.autoExp}</span>
+                                    ${det.confirmed ? `<span class="b OK" style="font-size:11px">✓ ${t.confirmed}</span>` : ""}
+                                </div>
+                                <div style="font-weight:700;font-size:13px;margin:2px 0">${disp}</div>
+                                <div class="row" style="gap:4px;margin-top:4px">
+                                    ${!det.confirmed ? `<button type="button" class="btn sm" style="padding:2px 8px;font-size:12px" onclick="App.confirmDate('${r.id}')">${t.useThis}</button>` : ""}
+                                    <button type="button" class="btn sm sec" style="padding:2px 8px;font-size:12px" onclick="App.editDate('${r.id}')">${t.edit}</button>
+                                </div>
+                                ${det.others && det.others.length ? `<div class="k" style="margin-top:5px;font-size:11px">${t.otherExp}: ${det.others.slice(0, 3).map(o => `<button type="button" class="btn sm sec" style="padding:1px 5px;font-size:11px;margin:1px" onclick="App.pickDate('${r.id}','${o.isoDate}')">${S.lang === "bn" ? toBnDigits(o.displayDate) : o.displayDate}</button>`).join(" ")}</div>` : ""}
+                            </div>`;
+                        } else if (det.status === "candidates") {
+                            detHtml = `<div class="exp-box exp-suggest">
+                                <div style="font-weight:600;margin-bottom:3px">${t.possExp}</div>
+                                <div class="row" style="gap:4px">${det.candidates.slice(0, 4).map(c => `<button type="button" class="btn sm sec" style="padding:2px 8px;font-size:12px" onclick="App.pickDate('${r.id}','${c.isoDate}')">${S.lang === "bn" ? toBnDigits(c.displayDate) : c.displayDate}</button>`).join(" ")}</div>
+                            </div>`;
+                        } else if (det.status === "none") {
+                            detHtml = `<div class="exp-box exp-none">${t.noExp}</div>`;
+                        } else if (det.status === "scanned") {
+                            detHtml = `<div class="exp-box exp-none">${t.scannedPdf}</div>`;
+                        }
+                    }
+                    const ex = !r.has_expiry ? `<span class="k">${t.expNA}</span>` : fid ? `<div class="exp-cell"><input type="date" id="exp-input-${r.id}" value="${S.expiry[r.id] || ""}" aria-label="${t.exp}" onchange="App.expiry(${i},this.value)">${detHtml}</div>` : `<span class="k">—</span>`;
+                    return `<tr><td>${r.order}</td><td><div class="v">${esc(title(r))}</div><span class="k">${r.mandatory ? t.mand : t.opt}${r.has_expiry ? " · " + t.exp : ""}</span></td><td><select aria-label="${esc(title(r))}" onchange="App.match(${i},this.value)"><option value="">${t.sel}</option>${opts}</select> ${fid ? `<button class="btn sm sec" onclick="App.match(${i},'')">${t.undo}</button>` : ""}</td><td>${ex}</td><td><span class="b ${st}" data-st="${i}">${t[st]}</span></td></tr>`
+                }).join("") + "</table>"; UI.stat()
+            },
+            stat() {
+                const t = I18N[S.lang], c = {}; if (S.req) S.req.requirements.forEach((r, i) => { const s = Val.status(r); c[s] = (c[s] || 0) + 1; const el = document.querySelector(`[data-st="${i}"]`); if (el) { el.className = "b " + s; el.textContent = t[s] } });
+                $("stSum").innerHTML = S.req ? ["Missing", "Needed", "Expired", "NP", "OK"].map(k => `<span class="b ${k}">${t[k]}: ${c[k] || 0}</span>`).join(" ") : ""
+            },
+            gate() {
+                const t = I18N[S.lang], c = Val.blocking(), n = c.Missing + c.Needed + c.Expired; let h = "";
+                if (!S.req) h = `<div class="msg w">${t.needReq}</div>`; else if (n) h = `<div class="msg e">${t.blk}<ul>${Object.keys(c).filter(k => c[k]).map(k => `<li>${c[k]} ${t.why[k]}</li>`).join("")}</ul></div>`; else h = `<div class="msg o">${t.ready}</div>`;
+                if (S.files.some(f => Model.dupOthers(f).length)) h += `<div class="msg w">${t.dupWarn}</div>`;
+                $("why").innerHTML = h; $("gen").textContent = App.busy ? t.busy : t.gen; $("gen").disabled = !S.req || n > 0 || App.busy; $("dl2").textContent = t.dl2; $("dl2").hidden = !(App.last && !App.busy && App.last.sig === App.sig())
+            }
+        };
+        /* ===== app controller ===== */
+        const App = {
+            busy: false,
+            remove(id) { Model.removeFile(id); UI.render() },
+            async match(i, fid) {
+                const rid = S.req.requirements[i].id;
+                Model.setMatch(rid, fid ? Number(fid) : null);
+                UI.render();
+                const r = S.req.requirements[i];
+                if (r.has_expiry && S.match[rid]) {
+                    await App.detectExpiry(rid);
+                }
+            },
+            async detectExpiry(rid) {
+                const fid = S.match[rid];
+                if (!fid) return;
+                const file = S.files.find(f => f.id === fid);
+                if (!file) return;
+                const r = S.req && S.req.requirements.find(x => x.id === rid);
+                if (!r || !r.has_expiry) return;
+
+                S.detection[rid] = { status: "detecting" };
+                UI.reqs();
+
+                const rawText = await Extractor.getText(file);
+                if (!rawText || !rawText.trim()) {
+                    S.detection[rid] = { status: "scanned" };
+                    UI.reqs();
+                    return;
+                }
+
+                const candidates = DateParser.extractCandidates(rawText);
+                const scored = DateParser.scoreCandidates(candidates, rawText);
+
+                if (!scored.length) {
+                    S.detection[rid] = { status: "none" };
+                    UI.reqs();
+                    return;
+                }
+
+                const top = scored[0];
+                if (top.confidence === "HIGH") {
+                    S.expiry[rid] = top.isoDate;
+                    const others = scored.filter(x => x.isoDate !== top.isoDate);
+                    S.detection[rid] = {
+                        status: "detected",
+                        date: top.isoDate,
+                        displayDate: top.displayDate,
+                        confidence: "HIGH",
+                        confirmed: false,
+                        others
+                    };
+                } else {
+                    S.detection[rid] = {
+                        status: "candidates",
+                        candidates: scored
+                    };
+                }
+                UI.render();
+            },
+            confirmDate(rid) {
+                if (S.detection[rid]) {
+                    S.detection[rid].confirmed = true;
+                }
+                UI.reqs();
+            },
+            editDate(rid) {
+                const el = $("exp-input-" + rid);
+                if (el) {
+                    el.focus();
+                    if (typeof el.showPicker === "function") {
+                        try { el.showPicker(); } catch (e) { }
+                    }
+                }
+            },
+            pickDate(rid, isoDate) {
+                const d = Day(isoDate);
+                if (d) {
+                    S.expiry[rid] = d;
+                    const disp = DateParser.formatDisplay(d);
+                    const prev = S.detection[rid] || {};
+                    const pool = (prev.candidates || prev.others || []);
+                    S.detection[rid] = {
+                        status: "detected",
+                        date: d,
+                        displayDate: disp,
+                        confidence: "HIGH",
+                        confirmed: true,
+                        others: pool.filter(x => x.isoDate !== d)
+                    };
+                }
+                UI.stat(); UI.gate(); UI.files(); UI.reqs();
+            },
+            expiry(i, v) {
+                const id = S.req.requirements[i].id, d = Day(v);
+                if (d) {
+                    S.expiry[id] = d;
+                    if (!S.detection[id]) S.detection[id] = { status: "detected", date: d, displayDate: DateParser.formatDisplay(d), confidence: "HIGH" };
+                    S.detection[id].confirmed = true;
+                } else {
+                    delete S.expiry[id];
+                    if (S.detection[id]) S.detection[id].confirmed = false;
+                }
+                UI.stat(); UI.gate(); UI.files(); UI.reqs();
+            },
+            async loadReq(file) {
+                try {
+                    const r = Req.parse(await file.text());
+                    S.req = r; S.match = ND(); S.expiry = ND(); S.detection = ND();
+                    $("reqName").textContent = file.name; UI.msg("reqMsg", "", "")
+                } catch (e) {
+                    UI.msg("reqMsg", "e", esc(T("badJson") + errText(e)))
+                }
+                UI.render();
+            },
+            async addFiles(list) {
+                UI.msg("upMsg", "", "");
+                const errs = await Intake.add(list, (i, n, name) => { UI.render(); if (name) UI.msg("upMsg", "w", `${T("wait")} ${i}/${n}: ${esc(name)}`) });
+                const lim = errs.filter(e => e.kind === "max30"), rest = errs.filter(e => e.kind !== "max30");
+                let h = rest.map(e => `<b>${esc(e.name)}</b> ${T(e.kind)}`).join("<br>");
+                if (lim.length) h += (h ? "<br>" : "") + `<b>${lim.length}</b> ${T("max30")}`;
+                UI.msg("upMsg", h ? "e" : "", h); UI.render()
+            },
+            async generate() {
+                if (App.busy) return; const c = Val.blocking(); if (!S.req || c.Missing + c.Needed + c.Expired > 0) { UI.gate(); return }
+                App.busy = true; App.last = null; UI.gate(); $("genMsg").innerHTML = ""; await new Promise(r => setTimeout(r, 30));
+                try { const { bytes, total } = await Gen.build(), name = String(S.req.tender.tender_id).replace(/[^\w.\-]+/g, "_") + "_Package.pdf"; App.last = { bytes, name, total, sig: App.sig() }; App.busy = false; await App.save() }
+                catch (e) { $("genMsg").innerHTML = `<span class="msg e">${esc(errText(e))}</span>` }
+                App.busy = false; UI.gate()
+            },
+            sig() { return JSON.stringify([S.req && S.req.tender.tender_id, S.match, S.expiry, S.files.map(f => f.id), S.logo ? S.logo.name + "_" + S.logo.bytes.length : null]) },
+            async loadLogo(file) {
+                if (!file) return;
+                const isPng = file.type === "image/png" || /\.png$/i.test(file.name);
+                const isJpg = file.type === "image/jpeg" || file.type === "image/jpg" || /\.(jpe?g)$/i.test(file.name);
+                if (!isPng && !isJpg) {
+                    UI.msg("logoMsg", "e", esc(T("badLogo")));
+                    return;
+                }
+                try {
+                    const buf = await file.arrayBuffer();
+                    const u8 = new Uint8Array(buf);
+                    const hasPngSig = u8[0] === 0x89 && u8[1] === 0x50 && u8[2] === 0x4E && u8[3] === 0x47;
+                    const hasJpgSig = u8[0] === 0xFF && u8[1] === 0xD8;
+                    if (!hasPngSig && !hasJpgSig) {
+                        UI.msg("logoMsg", "e", esc(T("badLogo")));
+                        return;
+                    }
+                    const mime = hasPngSig ? "image/png" : "image/jpeg";
+                    const blob = new Blob([u8], { type: mime });
+                    const objUrl = URL.createObjectURL(blob);
+                    const img = new Image();
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = () => reject(new Error("Image decode failed"));
+                        img.src = objUrl;
+                    });
+                    let finalBytes = u8;
+                    const maxDim = 1200;
+                    if (img.naturalWidth > maxDim || img.naturalHeight > maxDim) {
+                        const sc = Math.min(maxDim / img.naturalWidth, maxDim / img.naturalHeight);
+                        const cvs = document.createElement("canvas");
+                        cvs.width = Math.round(img.naturalWidth * sc);
+                        cvs.height = Math.round(img.naturalHeight * sc);
+                        const ctx = cvs.getContext("2d");
+                        ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+                        const resBlob = await new Promise(r => cvs.toBlob(r, mime, 0.92));
+                        finalBytes = new Uint8Array(await resBlob.arrayBuffer());
+                    }
+                    if (S.logo && S.logo.url) {
+                        try { URL.revokeObjectURL(S.logo.url); } catch (_) {}
+                    }
+                    const previewUrl = URL.createObjectURL(new Blob([finalBytes], { type: mime }));
+                    S.logo = {
+                        name: file.name,
+                        bytes: finalBytes,
+                        url: previewUrl,
+                        width: img.naturalWidth,
+                        height: img.naturalHeight,
+                        isPng: hasPngSig
+                    };
+                    UI.msg("logoMsg", "", "");
+                } catch (e) {
+                    UI.msg("logoMsg", "e", esc(T("loadLogoErr")));
+                }
+                UI.gate();
+                UI.render();
+            },
+            removeLogo() {
+                if (S.logo && S.logo.url) {
+                    try { URL.revokeObjectURL(S.logo.url); } catch (_) {}
+                }
+                S.logo = null;
+                UI.msg("logoMsg", "", "");
+                $("logoIn").value = "";
+                UI.gate();
+                UI.render();
+            },
+            async save() {
+                const L = App.last; if (!L) return; let saved = false;
+                try { const d = await claude.use("downloads"); if (d) { await d.save({ filename: L.name, data: L.bytes }); saved = true } } catch (e) { if (e && e.code === "declined") { $("genMsg").innerHTML = `<span class="msg w">${T("saveFail")}</span>`; UI.gate(); return } }
+                if (!saved) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([L.bytes], { type: "application/pdf" })); a.download = L.name; document.body.appendChild(a); a.click(); a.remove() }
+                $("genMsg").innerHTML = `<span class="msg o">${T("done")}${esc(L.name)} (${L.total} ${T("pages")}, ${fmt(L.bytes.length)})</span>`; UI.gate()
+            }
+        };
+        reqIn.onchange = e => { if (e.target.files[0]) App.loadReq(e.target.files[0]); e.target.value = "" };
+        logoIn.onchange = e => { if (e.target.files[0]) App.loadLogo(e.target.files[0]); e.target.value = "" };
+        pdfIn.onchange = e => { App.addFiles([...e.target.files]); e.target.value = "" };
+        const dz = document.querySelector(".drop");["dragover", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); if (ev === "drop") App.addFiles([...e.dataTransfer.files]) }));
+        UI.render();
+    </script>
+</body>
+
+</html>
