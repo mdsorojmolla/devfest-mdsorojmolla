@@ -6,7 +6,7 @@ Built for the AI DevFest 2026 Vibe Coding Competition.
 
 ---
 
-## Privacy: 100% Browser-Only Processing
+## Privacy: 100% Browser-Only Processing 
 
 * The application is **strictly frontend-only**. There is no backend, database, authentication, or cloud storage.
 * All PDF parsing, hashing, text extraction, expiry date detection, validation, and package generation happen **locally inside the browser** on the user's machine.
